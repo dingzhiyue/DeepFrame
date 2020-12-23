@@ -59,6 +59,8 @@ class Tensor:
     def __imul__(self, other):
         self.data = self.data * transfer_to_tensor(other).data
         return self
+    def __pow__(self, other):
+        return _tensor_pow(self, transfer_to_tensor(other))
 
 
 #functions
@@ -152,6 +154,22 @@ def _tensor_mul(t1:'tensor', t2:'tensor')->'tensor':
     if t2.requires_grad:
         def grad_fn2(grad):
             grad = grad * t1.data
+            return boardcast_grad(t2, grad)
+        parents.append(Parents(t2, grad_fn2))
+    return Tensor(data, requires_grad, parents)
+
+def _tensor_pow(t1:'tensor', t2:'tensor')->'tensor':
+    data = t1.data**t2.data
+    requires_grad = t1.requires_grad or t2.requires_grad
+    parents = []
+    if t1.requires_grad:
+        def grad_fn1(grad):
+            grad = grad * t2.data * t1.data**(t2.data -1 )
+            return boardcast_grad(t1, grad)
+        parents.append(Parents(t1, grad_fn1))
+    if t2.requires_grad:
+        def grad_fn2(grad):
+            grad = grad * (np.log(t1.data)) * data
             return boardcast_grad(t2, grad)
         parents.append(Parents(t2, grad_fn2))
     return Tensor(data, requires_grad, parents)

@@ -144,3 +144,52 @@ class test_Tensor(unittest.TestCase):
         print(T.data)
         print(A.grad)
         #assert 1==2
+
+    def test_pow_scaler(self):
+        A = Tensor([[1,2,3],[4,5,6]], requires_grad=True)
+        E = 0.5
+        T = A**E
+        T.backward([[3,2,5],[1,1,2]])
+        T_true = np.array([[1,2,3],[4,5,6]])**0.5
+        A_grad_true = 0.5* np.array([[1,2,3],[4,5,6]])**-0.5 * np.array([[3,2,5],[1,1,2]])
+        np.testing.assert_equal(T.data, T_true)
+        np.testing.assert_equal(A.grad, A_grad_true)
+
+    def test_pow(self):
+        A = Tensor([[1,2,3]], requires_grad=True)
+        E = Tensor([[3,2,1]], requires_grad=True)
+        T = A**E
+        T.backward([[3,2,5]])
+        assert T.data.tolist()==[[1,4,3]]
+        assert A.grad.tolist()==[[9,8,5]]
+        E_grad_true = np.log(np.array([[1,2,3]])) * np.array([[1,4,3]]) * np.array([[3,2,5]])
+        np.testing.assert_equal(E.grad, E_grad_true)
+
+    def test_pow_boardcast1(self):
+        A = Tensor([[1,2,3],[4,5,6]], requires_grad=True)
+        E = Tensor([[1,2,3]], requires_grad=True)
+        T = A**E
+        T.backward([[3,2,5],[1,1,2]])
+        T_true = [[1,4,27],[4,25,216]]
+        A_grad_true = [[3,8,135],[1,10,216]]
+        assert T.data.tolist()==T_true
+        assert A.grad.tolist()==A_grad_true
+        E_grad_true = np.log(np.array([[1,2,3],[4,5,6]]))*np.array(T_true) * np.array([[3,2,5],[1,1,2]])
+        print(E_grad_true)
+        E_grad_true = E_grad_true.sum(axis=0, keepdims=True)
+        print(E.grad)
+        print(E_grad_true)
+        np.testing.assert_equal(E.grad, E_grad_true)
+
+    def test_pow_boardcast2(self):
+        A = Tensor([[1,2,3]], requires_grad=True)
+        E = Tensor([[1,2,3],[3,2,1]], requires_grad=True)
+        T = A**E
+        T.backward([[3,2,5],[1,1,2]])
+        T_true = [[1,4,27],[1,4,3]]
+        A_grad_true = [[6,12,137]]
+        assert T.data.tolist()==T_true
+        assert A.grad.tolist()==A_grad_true
+
+        E_grad_true = np.log(np.array([[1,2,3],[1,2,3]])) * np.array(T_true) * np.array([[3,2,5],[1,1,2]])
+        np.testing.assert_equal(E.grad, E_grad_true)
