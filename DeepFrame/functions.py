@@ -61,7 +61,7 @@ def abs(t:'tensor')->'tensor':
 
 def log(t:'tensor')->'tensor':
     epsilon = 0.0000000001
-    data = np.log(t.data)
+    data = np.log(t.data + epsilon)
     requires_grad = t.requires_grad
     parents = []
     if t.requires_grad:

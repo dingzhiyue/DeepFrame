@@ -2,11 +2,11 @@ import numpy as np
 from DeepFrame.tensor import Tensor
 import inspect
 
-class parameter(Tensor):
+class Parameter(Tensor):
     '''
     parameter tensor with initialization
     '''
-    def __init__(self, parameter_shape):
+    def __init__(self, parameter_shape:'list'):
         data = np.random.randn(*parameter_shape)
         super().__init__(data, requires_grad=True)
 
@@ -16,9 +16,9 @@ class Model:
         get all parameters of the model
         '''
         for name, obj in inspect.getmembers(self):
-            if isinstance(obj, parameter):
+            if isinstance(obj, Parameter):
                 yield obj
-            elif isinstance(obj, model):
+            elif isinstance(obj, Model):
                 yield from obj.get_parameters()
 
     def zero_grad(self):
@@ -27,3 +27,5 @@ class Model:
         '''
         for parameter in self.get_parameters():
             parameter.zero_grad()
+
+    

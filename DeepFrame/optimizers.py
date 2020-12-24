@@ -15,7 +15,7 @@ class Adam:
         self.alpha = lr
         self.V, self.S = self.create_S_V(Model)
 
-    def create_S_V(self, Model:'DeepFrame.Model')->'lists':
+    def create_S_V(self, Model:'DeepFrame.Model')->'lists[ndarray,...]':
         V, S= [], []
         for parameter in Model.get_parameters():
             V.append(np.zeros_like(parameter.grad))
@@ -24,11 +24,9 @@ class Adam:
 
     def update(self, Model):
         epsilon = 0.0000000001
-        #i = 0
         for i, parameter in enumerate(Model.get_parameters()):
             V_new = (self.beta1*self.V[i]+(1-self.beta1)*parameter.grad)#/(1-self.beta1**self.t) #ndarray
-            S_new = (self.beta2*self.S[i]+(1-self.beta2)*parameter.gradient*parameter.grad)#/(1-self.beta2**self.t) #ndarray
+            S_new = (self.beta2*self.S[i]+(1-self.beta2)*parameter.grad*parameter.grad)#/(1-self.beta2**self.t) #ndarray
             parameter.data -= self.alpha * V_new / (S_new**0.5+epsilon)
             self.V[i] = V_new
             self.S[i] = S_new
-            #i += 1
