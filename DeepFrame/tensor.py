@@ -61,6 +61,8 @@ class Tensor:
         return self
     def __pow__(self, other):
         return _tensor_pow(self, transfer_to_tensor(other))
+    def __getitem__(self, idx:'slice'):
+        return _tensor_slice(self, idx)
 
 
 #functions
@@ -172,4 +174,16 @@ def _tensor_pow(t1:'tensor', t2:'tensor')->'tensor':
             grad = grad * (np.log(t1.data)) * data
             return boardcast_grad(t2, grad)
         parents.append(Parents(t2, grad_fn2))
+    return Tensor(data, requires_grad, parents)
+
+def _tensor_slice(t:'tensor', idx:'slice')->'tensor':
+    data = t.data[idx]
+    requires_grad = t.requires_grad
+    parents = []
+    if t.requires_grad:
+        def grad_fn(grad):
+            temp = np.zeros_like(t.data)
+            temp[idx] = grad
+            return temp
+        parents.append(Parents(t, grad_fn))
     return Tensor(data, requires_grad, parents)

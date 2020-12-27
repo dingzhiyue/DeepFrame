@@ -1,18 +1,22 @@
+#add DeepFrame project path to system path otherwise it may throw "no module named 'DeepFrame'"
 import sys
 sys.path.append('/Users/zhiyue/Desktop/DeepFrame')
+
+
 import pandas as pd
 import numpy as np
 
 from DeepFrame.tensor import Tensor
-from DeepFrame.model import Model, Parameter
+from DeepFrame.module import Module, Parameter, save_model, load_model
 from DeepFrame.optimizers import SGD, Adam
 from DeepFrame.functions import sigmoid, tanh
 from DeepFrame.losses import binary_CE_loss, focal_loss
 from DeepFrame.metrics import accuracy
+from DeepFrame.layers import Dense
 
 
 def load_data()->'df':
-    path = '/Users/zhiyue/Desktop/DeepFrame/dataset/breast_cancer_dataset.csv'
+    path = 'data/breast_cancer_dataset.csv'
     df = pd.read_csv(path)
     df['diagnosis'].loc[df['diagnosis']=='B'] = 0
     df['diagnosis'].loc[df['diagnosis']=='M'] = 1
@@ -30,18 +34,23 @@ def data_prepare(df_train_x:'df', df_train_y, df_validate_x, df_validate_y)->'te
     validate_y = Tensor(df_validate_y.values.astype(float).reshape(-1,1))
     return train_x, train_y, validate_x, validate_y
 
-class model(Model):
+class breast_cancer_model(Module):
     def __init__(self, input_shape):
-        self.w1 = Parameter([input_shape, 10])
-        self.b1 = Parameter([1,10])
-        self.w2 = Parameter([10, 1])
-        self.b2 = Parameter([1,1])
+        self.layer1 = Dense(input_shape, 10, 'sigmoid', 'layer1')
+        self.layer2 = Dense(10, 1, 'sigmoid', 'layer2')
+        #self.w1 = Parameter([input_shape, 10])
+        #self.b1 = Parameter([1,10])
+        #self.w2 = Parameter([10, 1])
+        #self.b2 = Parameter([1,1])
     def forward(self, train_x:'tensor')->'tensor':
-        y1 = train_x @ self.w1 + self.b1
-        y1 = sigmoid(y1)
-        y2 = y1 @ self.w2 + self.b2
-        y_pred = sigmoid(y2)
-        return y_pred
+        y1 = self.layer1.forward(train_x)
+        y2 = self.layer2.forward(y1)
+        #y1 = train_x @ self.w1 + self.b1
+        #y1 = sigmoid(y1)
+        #y2 = y1 @ self.w2 + self.b2
+        #y_pred = sigmoid(y2)
+        #return y_pred
+        return y2
     def fit(self, train_x:'tensor', train_y:'tensor'):
         epochs = 30000
         lr = 0.001
@@ -57,8 +66,6 @@ class model(Model):
         y_pred = self.forward(train_x)
         acc = accuracy(y_pred, train_y)
         print('train acc', acc)
-
-
     def validate(self, validate_x:'tensor', validate_y:'tensor'):
         y_pred = self.forward(validate_x)
         acc = accuracy(y_pred, validate_y)
@@ -68,6 +75,11 @@ if __name__=='__main__':
     train_x, train_y, validate_x, validate_y = load_data()
     train_x, train_y, validate_x, validate_y = data_prepare(train_x, train_y, validate_x, validate_y)
 
-    model = model(train_x.data.shape[1])
+    model = breast_cancer_model(train_x.data.shape[1])
     model.fit(train_x, train_y)
+    model.validate(validate_x, validate_y)
+    save_model(model,'bc_model')
+    #model.save_parameters('parameters')
+    #model.load_parameters('parameters')
+    model = load_model('bc_model')
     model.validate(validate_x, validate_y)

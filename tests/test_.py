@@ -1,3 +1,5 @@
+#import sys
+#sys.path.append('/Users/zhiyue/Desktop/DeepFrame')
 import unittest
 import pytest
 import numpy as np
@@ -134,7 +136,7 @@ class test_Tensor(unittest.TestCase):
         log_true = np.log(np.array([[1,2,3],[4,5,6]]))
         grad = np.array([[2,4,6],[8,10,12]])
         grad_true = grad / A.data
-        assert T.data.tolist()==log_true.tolist()
+        np.testing.assert_almost_equal(T.data, log_true)
         np.testing.assert_almost_equal(A.grad, grad_true)
 
     def test_dropout(self):
