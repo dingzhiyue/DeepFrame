@@ -7,8 +7,8 @@ import pandas as pd
 import numpy as np
 
 from DeepFrame.tensor import Tensor
-from DeepFrame.module import Module, Parameter, save_model, load_model
-from DeepFrame.optimizers import SGD, Adam
+from DeepFrame.module import Module, save_model, load_model
+from DeepFrame.optimizers import Adam
 from DeepFrame.functions import sigmoid, tanh
 from DeepFrame.losses import binary_CE_loss, focal_loss
 from DeepFrame.metrics import accuracy
@@ -38,23 +38,13 @@ class breast_cancer_model(Module):
     def __init__(self, input_shape):
         self.layer1 = Dense(input_shape, 10, 'sigmoid', 'layer1')
         self.layer2 = Dense(10, 1, 'sigmoid', 'layer2')
-        #self.w1 = Parameter([input_shape, 10])
-        #self.b1 = Parameter([1,10])
-        #self.w2 = Parameter([10, 1])
-        #self.b2 = Parameter([1,1])
     def forward(self, train_x:'tensor')->'tensor':
         y1 = self.layer1.forward(train_x)
         y2 = self.layer2.forward(y1)
-        #y1 = train_x @ self.w1 + self.b1
-        #y1 = sigmoid(y1)
-        #y2 = y1 @ self.w2 + self.b2
-        #y_pred = sigmoid(y2)
-        #return y_pred
         return y2
     def fit(self, train_x:'tensor', train_y:'tensor'):
         epochs = 30000
         lr = 0.001
-        #optimizer = SGD(lr)
         optimizer = Adam(lr, self)
         for epoch in range(epochs):
             self.zero_grad()
@@ -74,12 +64,11 @@ class breast_cancer_model(Module):
 if __name__=='__main__':
     train_x, train_y, validate_x, validate_y = load_data()
     train_x, train_y, validate_x, validate_y = data_prepare(train_x, train_y, validate_x, validate_y)
-
     model = breast_cancer_model(train_x.data.shape[1])
     model.fit(train_x, train_y)
     model.validate(validate_x, validate_y)
     save_model(model,'bc_model')
     #model.save_parameters('parameters')
     #model.load_parameters('parameters')
-    model = load_model('bc_model')
-    model.validate(validate_x, validate_y)
+    #model = load_model('bc_model')
+    #model.validate(validate_x, validate_y)
