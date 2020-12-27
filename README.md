@@ -27,8 +27,7 @@ Import DeepFrame framework
 from DeepFrame.tensor import Tensor
 from DeepFrame.module import Module, save_model, load_model
 from DeepFrame.optimizers import Adam
-from DeepFrame.functions import sigmoid, tanh
-from DeepFrame.losses import binary_CE_loss, focal_loss
+from DeepFrame.losses import binary_CE_loss
 from DeepFrame.metrics import accuracy
 from DeepFrame.layers import Dense
 ```
