@@ -18,7 +18,7 @@ git clone https://github.com/dingzhiyue/DeepFrame
 
 
 ## Examples using DeepFrame 
-### 1. Build a simple neural network to do a 'breast cancer classification' task.
+### Example 1. Build a simple neural network to do a 'breast cancer classification' task.
 The data comes from kaggle **[Breast Cancer Wisconsin data set](https://www.kaggle.com/uciml/breast-cancer-wisconsin-data)**. 
 This task is to classify Benign and Maligant breast cancer based on clinic data.
 
@@ -74,5 +74,70 @@ if __name__=='__main__':
     save_model(model,'bc_model')
 ```
 
-### We can very easily get a 96% accuracy on both training and validating set by implementing a very simple neural network!
+#### We can very easily get a 96% accuracy on both training and validating set by implementing a very simple neural network!
 <img src="Projects_using_DeepFrame/breast_cancer_detection/result.png" width="420" height="320">
+
+### Example 2. Build a simple unidirectional RNN to predict Google stock price.
+
+Import DeepFrame framework
+```
+from DeepFrame.tensor import Tensor
+from DeepFrame.module import Module, Parameter, save_model, load_model
+from DeepFrame.optimizers import Adam
+from DeepFrame.losses import MSE_loss, MAE_loss
+from DeepFrame.layers import RNN
+```
+
+Create model class (subclass of DeepFrame.Module) by initializing a single RNN layer and define a forward function.
+```
+class stock_price_model(Module):
+    def __init__(self, input_size):
+        self.layer1 = RNN(input_size, hidden_size=20, num_layers=1, activation='linear', bias=True)
+    def forward(self, input_data:'tensor')->'tensor':
+        return self.layer1.forward(input_data)
+```
+
+Define a fit function to train the model.
+```
+    def fit(self, train_x:'tensor', train_y:'tensor'):
+        epochs = 10000
+        lr = 0.01
+        optimizer = Adam(lr, self)
+        for epoch in range(epochs):
+            self.zero_grad()
+            y_pred, _ = self.forward(train_x)
+            loss = MSE_loss(y_pred, train_y)
+            loss.backward()
+            optimizer.update(self)
+            print('epoch', epoch, '     loss', loss.data)
+```
+
+Define a validation function to plot predictions on both training and validating data set. Figure plots requires an additional depedency on matplotlib.
+```
+    def validate(self, train_x:'tensor', train_y:'tensor',validate_x:'tensor', validate_y:'tensor'):
+        y_pred_train, _ = self.forward(train_x)
+        y_pred_validate, _ = self.forward(validate_x)
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.plot([i for i in range(train_x.data.shape[0])], y_pred_train.data)
+        plt.plot([i for i in range(train_x.data.shape[0])], train_y.data)
+        plt.legend(['prediction(train)', 'ground_truth(train)'])
+        plt.subplot(1,2,2)
+        plt.plot([i for i in range(validate_x.data.shape[0])], y_pred_validate.data)
+        plt.plot([i for i in range(validate_x.data.shape[0])], validate_y.data)
+        plt.legend(['prediction(validation)', 'ground_truth(validation)'])
+        plt.show()
+```
+
+Start the training (data preparation can be found in **[goog_stock_price_prediction.py](Projects_using_DeepFrame/stock_price_prediction/goog_stock_price_prediction.py)**)
+```
+if __name__=='__main__':
+    train_x, train_y, validate_x, validate_y = load_data()
+    model = stock_price_model(input_size=1)
+    model.fit(train_x, train_y)
+    model.validate(train_x, train_y, validate_x, validate_y)
+    save_model(model, 'goog_price_prediction_model')
+```
+
+#### A very simple RNN model can do the prediction quite well!
+<img src="Projects_using_DeepFrame/stock_price_prediction/prediction_figure.png" width="750" height="300">
